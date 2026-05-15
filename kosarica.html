@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Košarica – Kikipedija</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="kikipedija.css"/>
+  <style>
+    .order-page {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 60px 24px 100px;
+    }
+    .order-page h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+    .order-page .subtitle {
+      color: var(--gray);
+      font-size: 15px;
+      margin-bottom: 40px;
+    }
+
+    /* ── STAVKE KOŠARICE ───────────────────────────────── */
+    .cart-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--off-white);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+    .cart-item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .cart-item-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+    .cart-item-qty {
+      font-size: 13px;
+      color: var(--gray);
+    }
+    .cart-item-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .cart-item-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--mint-dark);
+      white-space: nowrap;
+    }
+    .cart-remove-btn {
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: var(--gray);
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .cart-remove-btn:hover {
+      border-color: #ff4d4d;
+      color: #ff4d4d;
+      background: rgba(255,77,77,0.06);
+    }
+
+    /* ── UKUPNO ────────────────────────────────────────── */
+    .cart-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1.5px solid var(--border);
+      margin-top: 8px;
+      padding-top: 20px;
+      margin-bottom: 32px;
+    }
+    .cart-total-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+    .cart-total-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--mint-dark);
+    }
+
+    /* ── PRAZNA KOŠARICA ───────────────────────────────── */
+    .cart-empty-static {
+      text-align: center;
+      padding: 80px 24px;
+    }
+    .cart-empty-static .empty-icon {
+      font-size: 72px;
+      display: block;
+      margin-bottom: 20px;
+    }
+    .cart-empty-static p {
+      font-size: 18px;
+      color: var(--gray);
+      margin-bottom: 28px;
+    }
+
+    /* ── FORMA ZA NARUDŽBU ─────────────────────────────── */
+    .order-form-wrap {
+      background: var(--ink);
+      border-radius: 24px;
+      padding: 36px 32px;
+      color: var(--white);
+    }
+    .order-form-wrap h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 900;
+      margin-bottom: 24px;
+    }
+    .order-form-wrap h4 {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      margin: 24px 0 14px;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .form-grid.full { grid-template-columns: 1fr; }
+    .order-form-wrap input,
+    .order-form-wrap select {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    .order-form-wrap input::placeholder { color: rgba(255,255,255,0.35); }
+    .order-form-wrap input:focus,
+    .order-form-wrap select:focus {
+      outline: none;
+      border-color: var(--mint);
+    }
+    .order-form-wrap select option { background: #1a1a1a; color: #fff; }
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      margin: 24px 0;
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      background: var(--mint);
+      color: var(--ink);
+      border: none;
+      border-radius: 14px;
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 900;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .submit-btn:hover {
+      background: var(--white);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.25);
+    }
+    .free-ship-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--mint);
+      font-weight: 600;
+      margin-top: 14px;
+    }
+    .pin-hint {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ── SUCCESS ───────────────────────────────────────── */
+    #success-screen {
+      display: none;
+      text-align: center;
+      padding: 80px 24px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    #success-screen .success-icon { font-size: 64px; display: block; margin-bottom: 24px; }
+    #success-screen h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px;
+      margin-bottom: 16px;
+    }
+    #success-screen p { color: var(--gray); font-size: 16px; line-height: 1.6; }
+
+    @media (max-width: 540px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .order-form-wrap { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header id="main-header">
+    <nav class="navbar">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">K</div>
+        <span class="logo-text">KIKIPEDIJA</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Početna</a></li>
+        <li><a href="proizvodi.html">Proizvodi</a></li>
+        <li><a href="o-nama.html">O nama</a></li>
+        <li><a href="kontakt.html">Kontakt</a></li>
+      </ul>
+      <a href="kosarica.html" class="btn-cart active-link">🛒 Košarica <span class="cart-badge">0</span></a>
+    </nav>
+  </header>
+
+  <div class="cart-section">
+    <div class="order-page">
+
+      <h2>Tvoja košarica</h2>
+      <p class="subtitle">Provjeri odabrane proizvode i nastavi na plaćanje.</p>
+
+      <!-- Prazna košarica -->
+      <div class="cart-empty-static" id="cart-empty-msg" style="display:none;">
+        <span class="empty-icon">🛒</span>
+        <p>Tvoja košarica je prazna.</p>
+        <a href="proizvodi.html" class="btn-primary">Pogledaj proizvode →</a>
+      </div>
+
+      <!-- Lista stavki (popunjava JS) -->
+      <div id="cart-items-wrap"></div>
+
+      <!-- Ukupno + forma (JS prikazuje/sakriva) -->
+      <div id="order-form-section" style="display:none;">
+        <div class="cart-total-row">
+          <span class="cart-total-label">Ukupno</span>
+          <span class="cart-total-price" id="cart-total">€0,00</span>
+        </div>
+
+        <div class="order-form-wrap">
+          <form id="order-form">
+            <h3>📦 Podaci za dostavu</h3>
+            <div class="form-grid">
+              <input type="text"  name="ime"       placeholder="Ime *"           required minlength="2"/>
+              <input type="text"  name="prezime"   placeholder="Prezime *"       required minlength="2"/>
+            </div>
+            <div class="form-grid full">
+              <input type="email" name="email"     placeholder="Email adresa *"  required/>
+            </div>
+            <div class="form-grid full">
+              <input type="tel"   name="tel"       placeholder="Broj mobitela *" required/>
+            </div>
+            <div class="form-grid full">
+              <input type="text"  name="adresa"    placeholder="Adresa dostave *" required/>
+            </div>
+            <div class="form-grid">
+              <input type="text"  name="grad"      placeholder="Grad *"          required/>
+              <input type="text"  name="postanski" placeholder="Poštanski broj *" required/>
+            </div>
+            <div class="form-grid full">
+              <input type="text"  name="napomena"  placeholder="Napomena (neobavezno)"/>
+            </div>
+
+            <hr class="divider"/>
+
+            <h3>💳 Plaćanje</h3>
+            <div class="form-grid full">
+              <select name="kartica" required>
+                <option value="">— Vrsta kartice —</option>
+                <option value="visa">Visa</option>
+                <option value="mastercard">Mastercard</option>
+                <option value="amex">American Express</option>
+                <option value="maestro">Maestro</option>
+                <option value="diners">Diners Club</option>
+              </select>
+            </div>
+            <div class="form-grid full">
+              <input type="text" name="brkartice" placeholder="Broj kartice (16 znamenki)" maxlength="19" inputmode="numeric" required pattern="[\d ]{16,19}"/>
+            </div>
+            <div class="form-grid">
+              <input type="text"     name="istice" placeholder="Vrijedi do (MM/GG)" maxlength="5" inputmode="numeric" required pattern="\d{2}/\d{2}"/>
+              <div>
+                <input type="password" name="pin" placeholder="PIN (3–4 znamenke)" maxlength="4" inputmode="numeric" required pattern="\d{3,4}"/>
+                <div class="pin-hint">🔒 PIN se ne pohranjuje</div>
+              </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Naruči sada →</button>
+            <p class="free-ship-note">🚚 Besplatna dostava iznad €50</p>
+          </form>
+        </div>
+      </div>
+
+      <!-- Success ekran -->
+      <div id="success-screen">
+        <span class="success-icon">✅</span>
+        <h2>Narudžba primljena!</h2>
+        <p>Hvala na kupnji. Potvrdu ćeš primiti na email. Paket stiže za 2–4 radna dana.</p>
+        <a href="proizvodi.html" class="btn-primary" style="display:inline-flex;margin-top:32px;">Nastavi kupovinu →</a>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">K</div>
+        <span class="logo-text">KIKIPEDIJA</span>
+      </a>
+      <p>© 2025 Kikipedija. Sva prava pridržana.</p>
+      <div class="footer-links">
+        <a href="o-nama.html">O nama</a>
+        <a href="proizvodi.html">Proizvodi</a>
+        <a href="kontakt.html">Kontakt</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="kikipedija-cart.js"></script>
+</body>
+</html>

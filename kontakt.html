@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kontakt – Kikipedija</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="kikipedija.css"/>
+</head>
+<body>
+
+  <header id="main-header">
+    <nav class="navbar">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">K</div>
+        <span class="logo-text">KIKIPEDIJA</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Početna</a></li>
+        <li><a href="proizvodi.html">Proizvodi</a></li>
+        <li><a href="o-nama.html">O nama</a></li>
+        <li><a href="kontakt.html" class="active-link">Kontakt</a></li>
+      </ul>
+      <a href="kosarica.html" class="btn-cart">
+        🛒 Košarica <span class="cart-badge">0</span>
+      </a>
+    </nav>
+  </header>
+
+  <section class="contact-section">
+    <div class="section-header">
+      <span class="section-eyebrow">Kontakt</span>
+      <h2 class="section-title">Piši nam</h2>
+      <p class="section-sub">Odgovaramo unutar 24 sata.</p>
+    </div>
+    <div class="contact-layout">
+      <form class="contact-form" action="#" method="post">
+        <input  type="text"  name="ime"    placeholder="Vaše ime"     required/>
+        <input  type="email" name="email"  placeholder="Email adresa" required/>
+        <textarea name="poruka" placeholder="Vaša poruka..." rows="5"></textarea>
+        <button type="submit" class="btn-primary" style="justify-content:center;">Pošalji poruku →</button>
+      </form>
+      <div class="contact-info">
+        <div class="contact-info-item">
+          <span class="contact-icon">📧</span>
+          <div><strong>Email</strong><p><a href="mailto:info@kikipedija.hr">info@kikipedija.hr</a></p></div>
+        </div>
+        <div class="contact-info-item">
+          <span class="contact-icon">📱</span>
+          <div><strong>Mobitel</strong><p><a href="tel:+38599000000">+385 99 000 0000</a></p></div>
+        </div>
+        <div class="contact-info-item">
+          <span class="contact-icon">📍</span>
+          <div><strong>Adresa</strong><p>Zagreb, Hrvatska</p></div>
+        </div>
+        <div class="contact-info-item">
+          <span class="contact-icon">🕐</span>
+          <div><strong>Radno vrijeme</strong><p>Pon–Pet: 9:00 – 17:00</p></div>
+        </div>
+        <div class="img-placeholder contact-map-placeholder">📍 Google Maps embed ili slika lokacije</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-inner">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">K</div>
+        <span class="logo-text">KIKIPEDIJA</span>
+      </a>
+      <p>© 2025 Kikipedija. Sva prava pridržana.</p>
+      <div class="footer-links">
+        <a href="o-nama.html">O nama</a>
+        <a href="proizvodi.html">Proizvodi</a>
+        <a href="kontakt.html">Kontakt</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="kikipedija-cart.js"></script>
+</body>
+</html>

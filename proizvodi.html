@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Proizvodi – Kikipedija</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="kikipedija.css"/>
+  <style>
+    /* ── SIZE PICKER OVERLAY (:target trick) ─────────────────── */
+    .size-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 800;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      animation: fadeIn 0.2s both;
+    }
+    .size-overlay:target {
+      display: flex;
+    }
+    .size-box {
+      background: var(--white);
+      border-radius: 24px;
+      padding: 36px 32px 28px;
+      max-width: 420px;
+      width: calc(100% - 48px);
+      position: relative;
+      animation: scaleIn 0.3s cubic-bezier(.34,1.56,.64,1) both;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+    }
+    .size-box h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 4px;
+      color: var(--ink);
+    }
+    .size-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--mint-dark);
+      margin-bottom: 20px;
+    }
+    .size-label-txt {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-bottom: 12px;
+    }
+    .size-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .size-options input[type="radio"] {
+      display: none;
+    }
+    .size-options label {
+      padding: 10px 18px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(.34,1.56,.64,1);
+      user-select: none;
+      background: var(--white);
+      color: var(--ink);
+    }
+    .size-options label:hover {
+      border-color: var(--mint);
+      transform: scale(1.05);
+      background: rgba(63,207,142,0.06);
+    }
+    .size-options input[type="radio"]:checked + label {
+      background: var(--ink);
+      color: var(--white);
+      border-color: var(--ink);
+      transform: scale(1.05);
+    }
+    /* Gumb "Dodaj" – neaktivan dok veličina nije odabrana */
+    .btn-add-size {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: var(--off-white);
+      color: var(--gray);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 900;
+      text-align: center;
+      cursor: not-allowed;
+      pointer-events: none;
+      text-decoration: none;
+      transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
+    }
+    /* :has() – aktivira gumb kad je radio checked */
+    .size-form:has(input[type="radio"]:checked) .btn-add-size {
+      background: var(--mint);
+      color: var(--ink);
+      border-color: var(--mint);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    .size-form:has(input[type="radio"]:checked) .btn-add-size:hover {
+      background: var(--mint-dark);
+      color: var(--white);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(63,207,142,0.3);
+    }
+    /* Zatvori gumb */
+    .size-close {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--off-white);
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--gray);
+      text-decoration: none;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+    .size-close:hover {
+      background: var(--mint-light);
+      border-color: var(--mint);
+      color: var(--ink);
+    }
+    /* Backdrop klik */
+    .size-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+    }
+    /* Napomena ispod forme */
+    .size-note {
+      font-size: 11px;
+      color: var(--gray);
+      text-align: center;
+      margin-top: 12px;
+    }
+    /* Gumb na kartici */
+    .btn-pick {
+      display: block;
+      width: 100%;
+      padding: 11px;
+      background: var(--off-white);
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
+      text-align: center;
+      text-decoration: none;
+      margin-top: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-pick::after {
+      content: '';
+      position: absolute;
+      width: 100%; height: 100%;
+      top: 0; left: 0;
+      background: var(--mint);
+      transform: translateX(-100%);
+      transition: transform 0.3s;
+      z-index: 0;
+    }
+    .btn-pick span { position: relative; z-index: 1; }
+    .btn-pick:hover { border-color: var(--mint); transform: translateY(-1px); }
+    .btn-pick:hover::after { transform: translateX(0); }
+    /* Sve na karticama izgleda kao obican tekst, bez link stila */
+    .product-card h3,
+    .product-card .price,
+    .product-card .cat-tag,
+    .product-card .product-desc {
+      color: inherit;
+      text-decoration: none;
+    }
+    /* filter gumbi bez link izgleda */
+    .filter-bar a.filter-btn {
+      text-decoration: none;
+      color: var(--ink);
+    }
+    .filter-bar a.filter-btn.active {
+      color: var(--white);
+    }
+  </style>
+</head>
+<body>
+
+  <header id="main-header">
+    <nav class="navbar">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">K</div>
+        <span class="logo-text">KIKIPEDIJA</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Početna</a></li>
+        <li><a href="proizvodi.html" class="active-link">Proizvodi</a></li>
+        <li><a href="o-nama.html">O nama</a></li>
+        <li><a href="kontakt.html">Kontakt</a></li>
+      </ul>
+      <a href="kosarica.html" class="btn-cart">🛒 Košarica <span class="cart-badge">0</span></a>
+    </nav>
+  </header>
+
+  <section class="section products-section">
+    <div class="section-header">
+      <span class="section-eyebrow">Kolekcija</span>
+      <h2 class="section-title">Svi proizvodi</h2>
+      <p class="section-sub">Pronađi savršeni komad za sebe.</p>
+    </div>
+
+    <div class="filter-bar">
+      <a href="#sve"    class="filter-btn active">Sve</a>
+      <a href="#majice" class="filter-btn">Majice</a>
+      <a href="#hlace"  class="filter-btn">Hlače</a>
+      <a href="#obuca"  class="filter-btn">Obuća</a>
+      <a href="#carape" class="filter-btn">Čarape</a>
+      <a href="#kape"   class="filter-btn">Kape</a>
+    </div>
+
+    <!-- MAJICE -->
+    <h3 class="cat-heading" id="majice">👕 Majice</h3>
+    <div class="product-grid">
+      <div class="product-card">
+        <div class="product-img-wrap"><div class="img-placeholder">📷 tshirt_white.jpg</div></div>
+        <div class="product-info">
+          <span class="cat-tag">Majice</span>
+          <h3>Bijela Majica</h3>
+          <p class="price">€7,90</p>
+          <p class="product-desc">Klasična majica od 100% organskog pamuka. Oversized kroj.</p>
+          <a href="#pick-majica-bijela" class="btn-pick"><span>📏 Odaberi veličinu →</span></a>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img-wrap" style="background:#1a1a1a;"><div class="img-placeholder" style="color:#666;background:#222;border-color:#444;">📷 tshirt_black.jpg</div></div>
+        <div class="product-info">
+          <span class="cat-tag">Majice</span>
+          <h3>Crna Majica</h3>
+          <p class="price">€7,90</p>
+          <p class="product-desc">Esencijalna crna majica — temelj svake garderobe.</p>
+          <a href="#pick-majica-crna" class="btn-pick"><span>📏 Odaberi veličinu →</span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- HLAČE -->
+    <h3 class="cat-heading" id="hlace">👖 Hlače</h3>
+    <div class="product-grid">
+      <div class="product-card">
+        <div class="product-img-wrap"><div class="img-placeholder">📷 cargo_grey.jpg</div></div>
+        <div class="product-info">
+          <span class="cat-tag">Hlače</span>
+          <h3>Cargo Hlače – Siva</h3>
+          <p class="price">€18,90</p>
+          <p class="product-desc">Cargo jogger hlače s elastičnim pojasom. 6 džepova.</p>
+          <a href="#pick-hlace-siva" class="btn-pick"><span>📏 Odaberi veličinu →</span></a>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img-wrap"><div class="img-placeholder">📷 cargo_beige.jpg</div></div>
+        <div class="product-info">
+          <span class="cat-tag">Hlače</span>
+          <h3>Cargo Hlače – Bež</h3>
+          <p class="price">€18,90</p>
+          <p class="product-desc">Iste omiljene cargo hlače u toploj bež boji.</p>
+          <a href="#pick-hlace-bez" class="btn-pick"><span>📏 Odaberi veličinu →</span></a>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img-wrap" style="background:#1a1a1a;"><div class="img-placeholder" style="color:#666;background:#222;border-color:#444;">📷 cargo_black.jpg</div></div>
+        <div class="product-info">
+          <span class="cat-tag">Hlače</span>
+          <h3>Cargo Hlače – Crne</h3>
+          <p class="price">€18,90</p>
+          <p class="product-desc">Crna varijanta cargo jogger hlača — timeless i svestrane.</p>
+          <a href="#pick-hlace-crna" class="btn-pick"><span>📏 Odaberi veličinu →</span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- OBUĆA -->
+    <h3 class="cat-heading" id="obuca">👟 Obuća</h3>
+    <div class="product-grid">
+      <div class="product-card">
+        <div class="product-img-wrap"><div class="img-placeholder">📷 shoe_runner_white.jpg</div></div>
+        <div class="product-info">
+          <span class="cat-tag">Obuća</span>
+          <h3>Tenisice Runner – Bijele</h3>
+          <p class="price">€27,90</p>
+          <p class="product-desc">Lagane running tenisice s air-cushion đonom.</p>
+          <a href="#pick-runner-bijele" class="btn-pick"><span>📏 Odaberi veličinu →</span></a>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img-wrap" style="background:#1a1a1a;"><div class="img-placeholder" style="color:#666;background:#222;border-color:#444;">📷 shoe_runner_black.jpg</div></div>
+        <div class="product-info">
+          <span class="cat-tag">Obuća</span>
+          <h3>Tenisice Runner – Crne</h3>
+          <p class="price">€27,90</p>
+          <p class="product-desc">Isti runner model u all-black izvedbi.</p>
+          <a href="#pick-runner-crne" class="btn-pick"><span>📏 Odaberi veličinu →</span></a>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img-wrap"><div class="img-placeholder">📷 shoe_low_white.jpg</div></div>
+        <div class="product-info">
+          <span class="cat-tag">Obuća</span>
+          <h3>Tenisice Low – Bijele</h3>
+          <p class="price">€24,90</p>
+          <p class="product-desc">Klasične low-top kožne tenisice s čistim dizajnom.</p>
+          <a href="#pick-low-bijele" class="btn-pick"><span>📏 Odaberi veličinu →</span></a>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img-wrap" style="background:#1a1a1a;"><div class="img-placeholder" style="color:#666;background:#222;border-color:#444;">📷 shoe_low_black.jpg</div></div>
+        <div class="product-info">
+          <span class="cat-tag">Obuća</span>
+          <h3>Tenisice Low – Crne</h3>
+          <p class="price">€24,90</p>
+          <p class="product-desc">Low-top kožne tenisice u crnoj boji.</p>
+          <a href="#pick-low-crne" class="btn-pick"><span>📏 Odaberi veličinu →</span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ČARAPE -->
+    <h3 class="cat-heading" id="carape">🧦 Čarape</h3>
+    <div class="product-grid">
+      <div class="product-card">
+        <div class="product-img-wrap" style="background:#1a1a1a;"><div class="img-placeholder" style="color:#666;background:#222;border-color:#444;">📷 socks_black.jpg</div></div>
+        <div class="product-info">
+          <span class="cat-tag">Čarape</span>
+          <h3>Čarape – Crne</h3>
+          <p class="price">€3,90</p>
+          <p class="product-desc">Ribbed čarape s Kikipedija logom na manšeti. 80% pamuk.</p>
+          <a href="#pick-carape-crne" class="btn-pick"><span>📏 Odaberi veličinu →</span></a>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img-wrap"><div class="img-placeholder">📷 socks_white.jpg</div></div>
+        <div class="product-info">
+          <span class="cat-tag">Čarape</span>
+          <h3>Čarape – Bijele</h3>
+          <p class="price">€3,90</p>
+          <p class="product-desc">Bijele čarape s Kikipedija logom.</p>
+          <a href="#pick-carape-bijele" class="btn-pick"><span>📏 Odaberi veličinu →</span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- KAPE -->
+    <h3 class="cat-heading" id="kape">🧢 Kape</h3>
+    <div class="product-grid">
+      <div class="product-card">
+        <div class="product-img-wrap" style="background:#1a1a1a;"><div class="img-placeholder" style="color:#666;background:#222;border-color:#444;">📷 kapa_black.jpg</div></div>
+        <div class="product-info">
+          <span class="cat-tag">Kape</span>
+          <h3>Kapa – Crna</h3>
+          <p class="price">€9,90</p>
+          <p class="product-desc">Pletena kapa s Kikipedija logom. Topla i udobna.</p>
+          <a href="#pick-kapa-crna" class="btn-pick"><span>📏 Odaberi veličinu →</span></a>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img-wrap"><div class="img-placeholder">📷 kapa_white.jpg</div></div>
+        <div class="product-info">
+          <span class="cat-tag">Kape</span>
+          <h3>Kapa – Bijela</h3>
+          <p class="price">€9,90</p>
+          <p class="product-desc">Isti model kape u bijeloj boji. Svestrana i moderna.</p>
+          <a href="#pick-kapa-bijela" class="btn-pick"><span>📏 Odaberi veličinu →</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-inner">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">K</div>
+        <span class="logo-text">KIKIPEDIJA</span>
+      </a>
+      <p>© 2025 Kikipedija. Sva prava pridržana.</p>
+      <div class="footer-links">
+        <a href="o-nama.html">O nama</a>
+        <a href="proizvodi.html">Proizvodi</a>
+        <a href="kontakt.html">Kontakt</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ════════════════════════════════════════════════════════════
+       SIZE PICKER MODALI – CSS :target
+       Forma šalje GET na kosarica.html s ?proizvod=...&velicina=...
+  ════════════════════════════════════════════════════════════════ -->
+
+  <!-- BIJELA MAJICA -->
+  <div class="size-overlay" id="pick-majica-bijela">
+    <a href="#" class="size-backdrop"></a>
+    <div class="size-box">
+      <a href="#" class="size-close">✕</a>
+      <h3>Bijela Majica</h3>
+      <div class="size-price">€7,90</div>
+      <div class="size-label-txt">Odaberi veličinu</div>
+      <form class="size-form" action="#">
+        <input type="hidden" name="proizvod" value="Bijela Majica"/>
+        <input type="hidden" name="cijena" value="7.90"/>
+        <div class="size-options">
+          <input type="radio" name="velicina" id="mb-xs" value="XS"/><label for="mb-xs">XS</label>
+          <input type="radio" name="velicina" id="mb-s"  value="S" /><label for="mb-s">S</label>
+          <input type="radio" name="velicina" id="mb-m"  value="M" /><label for="mb-m">M</label>
+          <input type="radio" name="velicina" id="mb-l"  value="L" /><label for="mb-l">L</label>
+          <input type="radio" name="velicina" id="mb-xl" value="XL"/><label for="mb-xl">XL</label>
+        </div>
+        <button type="submit" class="btn-add-size">+ Dodaj u košaricu</button>
+      </form>
+      <p class="size-note">ℹ️ Odaberi veličinu za aktivaciju gumba</p>
+    </div>
+  </div>
+
+  <!-- CRNA MAJICA -->
+  <div class="size-overlay" id="pick-majica-crna">
+    <a href="#" class="size-backdrop"></a>
+    <div class="size-box">
+      <a href="#" class="size-close">✕</a>
+      <h3>Crna Majica</h3>
+      <div class="size-price">€7,90</div>
+      <div class="size-label-txt">Odaberi veličinu</div>
+      <form class="size-form" action="#">
+        <input type="hidden" name="proizvod" value="Crna Majica"/>
+        <input type="hidden" name="cijena" value="7.90"/>
+        <div class="size-options">
+          <input type="radio" name="velicina" id="mc-xs" value="XS"/><label for="mc-xs">XS</label>
+          <input type="radio" name="velicina" id="mc-s"  value="S" /><label for="mc-s">S</label>
+          <input type="radio" name="velicina" id="mc-m"  value="M" /><label for="mc-m">M</label>
+          <input type="radio" name="velicina" id="mc-l"  value="L" /><label for="mc-l">L</label>
+          <input type="radio" name="velicina" id="mc-xl" value="XL"/><label for="mc-xl">XL</label>
+        </div>
+        <button type="submit" class="btn-add-size">+ Dodaj u košaricu</button>
+      </form>
+      <p class="size-note">ℹ️ Odaberi veličinu za aktivaciju gumba</p>
+    </div>
+  </div>
+
+  <!-- CARGO SIVA -->
+  <div class="size-overlay" id="pick-hlace-siva">
+    <a href="#" class="size-backdrop"></a>
+    <div class="size-box">
+      <a href="#" class="size-close">✕</a>
+      <h3>Cargo Hlače – Siva</h3>
+      <div class="size-price">€18,90</div>
+      <div class="size-label-txt">Odaberi veličinu</div>
+      <form class="size-form" action="#">
+        <input type="hidden" name="proizvod" value="Cargo Hlače – Siva"/>
+        <input type="hidden" name="cijena" value="18.90"/>
+        <div class="size-options">
+          <input type="radio" name="velicina" id="hs-xs" value="XS"/><label for="hs-xs">XS</label>
+          <input type="radio" name="velicina" id="hs-s"  value="S" /><label for="hs-s">S</label>
+          <input type="radio" name="velicina" id="hs-m"  value="M" /><label for="hs-m">M</label>
+          <input type="radio" name="velicina" id="hs-l"  value="L" /><label for="hs-l">L</label>
+          <input type="radio" name="velicina" id="hs-xl" value="XL"/><label for="hs-xl">XL</label>
+        </div>
+        <button type="submit" class="btn-add-size">+ Dodaj u košaricu</button>
+      </form>
+      <p class="size-note">ℹ️ Odaberi veličinu za aktivaciju gumba</p>
+    </div>
+  </div>
+
+  <!-- CARGO BEŽ -->
+  <div class="size-overlay" id="pick-hlace-bez">
+    <a href="#" class="size-backdrop"></a>
+    <div class="size-box">
+      <a href="#" class="size-close">✕</a>
+      <h3>Cargo Hlače – Bež</h3>
+      <div class="size-price">€18,90</div>
+      <div class="size-label-txt">Odaberi veličinu</div>
+      <form class="size-form" action="#">
+        <input type="hidden" name="proizvod" value="Cargo Hlače – Bež"/>
+        <input type="hidden" name="cijena" value="18.90"/>
+        <div class="size-options">
+          <input type="radio" name="velicina" id="hb-xs" value="XS"/><label for="hb-xs">XS</label>
+          <input type="radio" name="velicina" id="hb-s"  value="S" /><label for="hb-s">S</label>
+          <input type="radio" name="velicina" id="hb-m"  value="M" /><label for="hb-m">M</label>
+          <input type="radio" name="velicina" id="hb-l"  value="L" /><label for="hb-l">L</label>
+          <input type="radio" name="velicina" id="hb-xl" value="XL"/><label for="hb-xl">XL</label>
+        </div>
+        <button type="submit" class="btn-add-size">+ Dodaj u košaricu</button>
+      </form>
+      <p class="size-note">ℹ️ Odaberi veličinu za aktivaciju gumba</p>
+    </div>
+  </div>
+
+  <!-- CARGO CRNE -->
+  <div class="size-overlay" id="pick-hlace-crna">
+    <a href="#" class="size-backdrop"></a>
+    <div class="size-box">
+      <a href="#" class="size-close">✕</a>
+      <h3>Cargo Hlače – Crne</h3>
+      <div class="size-price">€18,90</div>
+      <div class="size-label-txt">Odaberi veličinu</div>
+      <form class="size-form" action="#">
+        <input type="hidden" name="proizvod" value="Cargo Hlače – Crne"/>
+        <input type="hidden" name="cijena" value="18.90"/>
+        <div class="size-options">
+          <input type="radio" name="velicina" id="hc-xs" value="XS"/><label for="hc-xs">XS</label>
+          <input type="radio" name="velicina" id="hc-s"  value="S" /><label for="hc-s">S</label>
+          <input type="radio" name="velicina" id="hc-m"  value="M" /><label for="hc-m">M</label>
+          <input type="radio" name="velicina" id="hc-l"  value="L" /><label for="hc-l">L</label>
+          <input type="radio" name="velicina" id="hc-xl" value="XL"/><label for="hc-xl">XL</label>
+        </div>
+        <button type="submit" class="btn-add-size">+ Dodaj u košaricu</button>
+      </form>
+      <p class="size-note">ℹ️ Odaberi veličinu za aktivaciju gumba</p>
+    </div>
+  </div>
+
+  <!-- RUNNER BIJELE -->
+  <div class="size-overlay" id="pick-runner-bijele">
+    <a href="#" class="size-backdrop"></a>
+    <div class="size-box">
+      <a href="#" class="size-close">✕</a>
+      <h3>Tenisice Runner – Bijele</h3>
+      <div class="size-price">€27,90</div>
+      <div class="size-label-txt">Odaberi broj</div>
+      <form class="size-form" action="#">
+        <input type="hidden" name="proizvod" value="Tenisice Runner – Bijele"/>
+        <input type="hidden" name="cijena" value="27.90"/>
+        <div class="size-options">
+          <input type="radio" name="velicina" id="rb-36" value="36"/><label for="rb-36">36</label>
+          <input type="radio" name="velicina" id="rb-37" value="37"/><label for="rb-37">37</label>
+          <input type="radio" name="velicina" id="rb-38" value="38"/><label for="rb-38">38</label>
+          <input type="radio" name="velicina" id="rb-39" value="39"/><label for="rb-39">39</label>
+          <input type="radio" name="velicina" id="rb-40" value="40"/><label for="rb-40">40</label>
+          <input type="radio" name="velicina" id="rb-41" value="41"/><label for="rb-41">41</label>
+          <input type="radio" name="velicina" id="rb-42" value="42"/><label for="rb-42">42</label>
+          <input type="radio" name="velicina" id="rb-43" value="43"/><label for="rb-43">43</label>
+          <input type="radio" name="velicina" id="rb-44" value="44"/><label for="rb-44">44</label>
+          <input type="radio" name="velicina" id="rb-45" value="45"/><label for="rb-45">45</label>
+          <input type="radio" name="velicina" id="rb-46" value="46"/><label for="rb-46">46</label>
+        </div>
+        <button type="submit" class="btn-add-size">+ Dodaj u košaricu</button>
+      </form>
+      <p class="size-note">ℹ️ Odaberi broj za aktivaciju gumba</p>
+    </div>
+  </div>
+
+  <!-- RUNNER CRNE -->
+  <div class="size-overlay" id="pick-runner-crne">
+    <a href="#" class="size-backdrop"></a>
+    <div class="size-box">
+      <a href="#" class="size-close">✕</a>
+      <h3>Tenisice Runner – Crne</h3>
+      <div class="size-price">€27,90</div>
+      <div class="size-label-txt">Odaberi broj</div>
+      <form class="size-form" action="#">
+        <input type="hidden" name="proizvod" value="Tenisice Runner – Crne"/>
+        <input type="hidden" name="cijena" value="27.90"/>
+        <div class="size-options">
+          <input type="radio" name="velicina" id="rc-36" value="36"/><label for="rc-36">36</label>
+          <input type="radio" name="velicina" id="rc-37" value="37"/><label for="rc-37">37</label>
+          <input type="radio" name="velicina" id="rc-38" value="38"/><label for="rc-38">38</label>
+          <input type="radio" name="velicina" id="rc-39" value="39"/><label for="rc-39">39</label>
+          <input type="radio" name="velicina" id="rc-40" value="40"/><label for="rc-40">40</label>
+          <input type="radio" name="velicina" id="rc-41" value="41"/><label for="rc-41">41</label>
+          <input type="radio" name="velicina" id="rc-42" value="42"/><label for="rc-42">42</label>
+          <input type="radio" name="velicina" id="rc-43" value="43"/><label for="rc-43">43</label>
+          <input type="radio" name="velicina" id="rc-44" value="44"/><label for="rc-44">44</label>
+          <input type="radio" name="velicina" id="rc-45" value="45"/><label for="rc-45">45</label>
+          <input type="radio" name="velicina" id="rc-46" value="46"/><label for="rc-46">46</label>
+        </div>
+        <button type="submit" class="btn-add-size">+ Dodaj u košaricu</button>
+      </form>
+      <p class="size-note">ℹ️ Odaberi broj za aktivaciju gumba</p>
+    </div>
+  </div>
+
+  <!-- LOW BIJELE -->
+  <div class="size-overlay" id="pick-low-bijele">
+    <a href="#" class="size-backdrop"></a>
+    <div class="size-box">
+      <a href="#" class="size-close">✕</a>
+      <h3>Tenisice Low – Bijele</h3>
+      <div class="size-price">€24,90</div>
+      <div class="size-label-txt">Odaberi broj</div>
+      <form class="size-form" action="#">
+        <input type="hidden" name="proizvod" value="Tenisice Low – Bijele"/>
+        <input type="hidden" name="cijena" value="24.90"/>
+        <div class="size-options">
+          <input type="radio" name="velicina" id="lb-36" value="36"/><label for="lb-36">36</label>
+          <input type="radio" name="velicina" id="lb-37" value="37"/><label for="lb-37">37</label>
+          <input type="radio" name="velicina" id="lb-38" value="38"/><label for="lb-38">38</label>
+          <input type="radio" name="velicina" id="lb-39" value="39"/><label for="lb-39">39</label>
+          <input type="radio" name="velicina" id="lb-40" value="40"/><label for="lb-40">40</label>
+          <input type="radio" name="velicina" id="lb-41" value="41"/><label for="lb-41">41</label>
+          <input type="radio" name="velicina" id="lb-42" value="42"/><label for="lb-42">42</label>
+          <input type="radio" name="velicina" id="lb-43" value="43"/><label for="lb-43">43</label>
+          <input type="radio" name="velicina" id="lb-44" value="44"/><label for="lb-44">44</label>
+          <input type="radio" name="velicina" id="lb-45" value="45"/><label for="lb-45">45</label>
+          <input type="radio" name="velicina" id="lb-46" value="46"/><label for="lb-46">46</label>
+        </div>
+        <button type="submit" class="btn-add-size">+ Dodaj u košaricu</button>
+      </form>
+      <p class="size-note">ℹ️ Odaberi broj za aktivaciju gumba</p>
+    </div>
+  </div>
+
+  <!-- LOW CRNE -->
+  <div class="size-overlay" id="pick-low-crne">
+    <a href="#" class="size-backdrop"></a>
+    <div class="size-box">
+      <a href="#" class="size-close">✕</a>
+      <h3>Tenisice Low – Crne</h3>
+      <div class="size-price">€24,90</div>
+      <div class="size-label-txt">Odaberi broj</div>
+      <form class="size-form" action="#">
+        <input type="hidden" name="proizvod" value="Tenisice Low – Crne"/>
+        <input type="hidden" name="cijena" value="24.90"/>
+        <div class="size-options">
+          <input type="radio" name="velicina" id="lc-36" value="36"/><label for="lc-36">36</label>
+          <input type="radio" name="velicina" id="lc-37" value="37"/><label for="lc-37">37</label>
+          <input type="radio" name="velicina" id="lc-38" value="38"/><label for="lc-38">38</label>
+          <input type="radio" name="velicina" id="lc-39" value="39"/><label for="lc-39">39</label>
+          <input type="radio" name="velicina" id="lc-40" value="40"/><label for="lc-40">40</label>
+          <input type="radio" name="velicina" id="lc-41" value="41"/><label for="lc-41">41</label>
+          <input type="radio" name="velicina" id="lc-42" value="42"/><label for="lc-42">42</label>
+          <input type="radio" name="velicina" id="lc-43" value="43"/><label for="lc-43">43</label>
+          <input type="radio" name="velicina" id="lc-44" value="44"/><label for="lc-44">44</label>
+          <input type="radio" name="velicina" id="lc-45" value="45"/><label for="lc-45">45</label>
+          <input type="radio" name="velicina" id="lc-46" value="46"/><label for="lc-46">46</label>
+        </div>
+        <button type="submit" class="btn-add-size">+ Dodaj u košaricu</button>
+      </form>
+      <p class="size-note">ℹ️ Odaberi broj za aktivaciju gumba</p>
+    </div>
+  </div>
+
+  <!-- ČARAPE CRNE -->
+  <div class="size-overlay" id="pick-carape-crne">
+    <a href="#" class="size-backdrop"></a>
+    <div class="size-box">
+      <a href="#" class="size-close">✕</a>
+      <h3>Čarape – Crne</h3>
+      <div class="size-price">€3,90</div>
+      <div class="size-label-txt">Odaberi veličinu</div>
+      <form class="size-form" action="#">
+        <input type="hidden" name="proizvod" value="Čarape – Crne"/>
+        <input type="hidden" name="cijena" value="3.90"/>
+        <div class="size-options">
+          <input type="radio" name="velicina" id="cc-1" value="30-33"/><label for="cc-1">30–33</label>
+          <input type="radio" name="velicina" id="cc-2" value="34-36"/><label for="cc-2">34–36</label>
+          <input type="radio" name="velicina" id="cc-3" value="37-40"/><label for="cc-3">37–40</label>
+          <input type="radio" name="velicina" id="cc-4" value="40-43"/><label for="cc-4">40–43</label>
+          <input type="radio" name="velicina" id="cc-5" value="44-46"/><label for="cc-5">44–46</label>
+        </div>
+        <button type="submit" class="btn-add-size">+ Dodaj u košaricu</button>
+      </form>
+      <p class="size-note">ℹ️ Odaberi veličinu za aktivaciju gumba</p>
+    </div>
+  </div>
+
+  <!-- ČARAPE BIJELE -->
+  <div class="size-overlay" id="pick-carape-bijele">
+    <a href="#" class="size-backdrop"></a>
+    <div class="size-box">
+      <a href="#" class="size-close">✕</a>
+      <h3>Čarape – Bijele</h3>
+      <div class="size-price">€3,90</div>
+      <div class="size-label-txt">Odaberi veličinu</div>
+      <form class="size-form" action="#">
+        <input type="hidden" name="proizvod" value="Čarape – Bijele"/>
+        <input type="hidden" name="cijena" value="3.90"/>
+        <div class="size-options">
+          <input type="radio" name="velicina" id="cb-1" value="30-33"/><label for="cb-1">30–33</label>
+          <input type="radio" name="velicina" id="cb-2" value="34-36"/><label for="cb-2">34–36</label>
+          <input type="radio" name="velicina" id="cb-3" value="37-40"/><label for="cb-3">37–40</label>
+          <input type="radio" name="velicina" id="cb-4" value="40-43"/><label for="cb-4">40–43</label>
+          <input type="radio" name="velicina" id="cb-5" value="44-46"/><label for="cb-5">44–46</label>
+        </div>
+        <button type="submit" class="btn-add-size">+ Dodaj u košaricu</button>
+      </form>
+      <p class="size-note">ℹ️ Odaberi veličinu za aktivaciju gumba</p>
+    </div>
+  </div>
+
+  <!-- KAPA CRNA -->
+  <div class="size-overlay" id="pick-kapa-crna">
+    <a href="#" class="size-backdrop"></a>
+    <div class="size-box">
+      <a href="#" class="size-close">✕</a>
+      <h3>Kapa – Crna</h3>
+      <div class="size-price">€9,90</div>
+      <div class="size-label-txt">Odaberi veličinu</div>
+      <form class="size-form" action="#">
+        <input type="hidden" name="proizvod" value="Kapa – Crna"/>
+        <input type="hidden" name="cijena" value="9.90"/>
+        <div class="size-options">
+          <input type="radio" name="velicina" id="kc-sm" value="S/M" /><label for="kc-sm">S/M</label>
+          <input type="radio" name="velicina" id="kc-lx" value="L/XL"/><label for="kc-lx">L/XL</label>
+        </div>
+        <button type="submit" class="btn-add-size">+ Dodaj u košaricu</button>
+      </form>
+      <p class="size-note">ℹ️ Odaberi veličinu za aktivaciju gumba</p>
+    </div>
+  </div>
+
+  <!-- KAPA BIJELA -->
+  <div class="size-overlay" id="pick-kapa-bijela">
+    <a href="#" class="size-backdrop"></a>
+    <div class="size-box">
+      <a href="#" class="size-close">✕</a>
+      <h3>Kapa – Bijela</h3>
+      <div class="size-price">€9,90</div>
+      <div class="size-label-txt">Odaberi veličinu</div>
+      <form class="size-form" action="#">
+        <input type="hidden" name="proizvod" value="Kapa – Bijela"/>
+        <input type="hidden" name="cijena" value="9.90"/>
+        <div class="size-options">
+          <input type="radio" name="velicina" id="kb-sm" value="S/M" /><label for="kb-sm">S/M</label>
+          <input type="radio" name="velicina" id="kb-lx" value="L/XL"/><label for="kb-lx">L/XL</label>
+        </div>
+        <button type="submit" class="btn-add-size">+ Dodaj u košaricu</button>
+      </form>
+      <p class="size-note">ℹ️ Odaberi veličinu za aktivaciju gumba</p>
+    </div>
+  </div>
+
+  <script src="kikipedija-cart.js"></script>
+</body>
+</html>
