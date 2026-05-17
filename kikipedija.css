@@ -245,10 +245,6 @@
       .product-grid{grid-template-columns:1fr} .hero h1{font-size:38px}
       .category-grid{grid-template-columns:repeat(2,1fr)} .form-row{grid-template-columns:1fr}
     }
-  /* ═══════════════════════════════════════════════════════════
-   dodatak.css  –  stilovi za višestruke stranice Kikipedije
-   Uključi NAKON kikipedija.css na svakoj stranici
-═══════════════════════════════════════════════════════════ */
 
 /* ── LOGO – uvijek u redu (ikona + tekst) ──────────────────── */
 a.logo,
