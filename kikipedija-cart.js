@@ -51,7 +51,7 @@ function kikiRenderCart() {
   var formSec  = document.getElementById('order-form-section');
   var totalEl  = document.getElementById('cart-total');
 
-  if (!wrap) return; /* nismo na kosarica.html */
+  if (!wrap) return; 
 
   var cart = kikiGetCart();
 
